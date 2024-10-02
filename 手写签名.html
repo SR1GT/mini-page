@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>手写签名</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="w-full min-h-screen flex flex-col justify-center items-center gap-8 bg-gray-200">
+  <canvas width="400" height="200" class="m-4 bg-white"></canvas>
+  <div class="w-full flex justify-center items-center gap-8">
+    <button id="btn-save"
+      class="px-16 py-2 bg-white border-2 border-green-500 rounded-full hover:bg-green-300 duration-150">
+      保存
+    </button>
+    <button id="btn-clear"
+      class="px-16 py-2 bg-white border-2 border-red-500 rounded-full hover:bg-red-300 duration-150">
+      清空
+    </button>
+  </div>
+  <div id="result" class="flex flex-col justify-center items-center"></div>
+
+  <script>
+    const canvas = document.querySelector("canvas");
+    const btn_save = document.getElementById("btn-save");
+    const btn_clear = document.getElementById("btn-clear");
+    const result = document.getElementById("result");
+
+    const ctx = canvas.getContext("2d");
+    let painting = false;
+    let drawStart = false;
+
+    function draw(e) {
+      if (!painting) return;
+      let clientX, clientY;
+      if (e.type.startsWith("touch")) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "black";
+
+      const x = clientX - canvas.offsetLeft;
+      const y = clientY - canvas.offsetTop;
+
+      if (painting) {
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      } else {
+        ctx.moveTo(x, y);
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem("canvas", canvas.toDataURL());
+    }
+    function loadState() {
+      const savedData = localStorage.getItem("canvas");
+      if (savedData) {
+        const img = new Image();
+        img.src = savedData;
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+        };
+      }
+    }
+
+    function startPosition(e) {
+      painting = true;
+      drawStart = true;
+      draw(e);
+    }
+    function finishedPosition() {
+      painting = false;
+      ctx.beginPath();
+      saveState();
+    }
+
+    // 鼠标签名
+    canvas.addEventListener("mousedown", startPosition);
+    canvas.addEventListener("mouseup", finishedPosition);
+    canvas.addEventListener("mousemove", draw);
+
+    // 触屏签名
+    canvas.addEventListener("touchstart", startPosition);
+    canvas.addEventListener("touchend", finishedPosition);
+    canvas.addEventListener("touchmove", draw);
+
+    // 保存按钮
+    btn_save.addEventListener("click", () => {
+      if (drawStart) {
+        const dataURL = canvas.toDataURL();
+        const imgElement = document.createElement("img");
+        imgElement.src = dataURL;
+        imgElement.classList.add(
+          "mt-2",
+          "border-2",
+          "border-black",
+          "border-dashed",
+          "rounded-xl"
+        );
+        const aElement = document.createElement("a");
+        aElement.href = dataURL;
+        if (result.childElementCount / 2)
+          aElement.download = `signature(${result.childElementCount / 2}).png`;
+        else aElement.download = "signature.png";
+        aElement.appendChild(document.createTextNode("点击下载"));
+        aElement.appendChild(imgElement);
+        result.appendChild(imgElement);
+        result.appendChild(aElement);
+      } else {
+        result.textContent = "请先签名";
+        result.classList.add("text-red-500", "text-sm");
+        setTimeout(() => {
+          result.textContent = "";
+        }, 1000);
+      }
+    });
+
+    // 清空按钮
+    btn_clear.addEventListener("click", () => {
+      drawStart = false;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      saveState();
+      result.innerHTML = "";
+    });
+  </script>
+</body>
+
+</html>
