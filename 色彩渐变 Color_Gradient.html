@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body class="flex flex-col items-center p-4">
+    <section
+      class="grid grid-cols-2 gap-4 px-16 py-6 bg-gray-50 border rounded-xl shadow-xl"
+    >
+      <label class="flex items-center gap-2">
+        <span>开始颜色：</span>
+        <div class="size-10 bg-[#ff0000] rounded-full border">
+          <input
+            type="color"
+            id="startColor"
+            value="#ff0000"
+            class="opacity-0"
+          />
+        </div>
+        <input
+          type="text"
+          id="startColorText"
+          value="#ff0000"
+          class="bg-transparent max-w-24 border-b-2 border-b-gray-500 p-1 outline-blue-300"
+        />
+      </label>
+      <label class="flex items-center gap-2">
+        <span>结束颜色：</span>
+        <div class="size-10 bg-[#0000ff] rounded-full border">
+          <input type="color" id="endColor" value="#0000ff" class="opacity-0" />
+        </div>
+        <input
+          type="text"
+          id="endColorText"
+          value="#0000ff"
+          class="bg-transparent max-w-24 border-b-2 border-b-gray-500 p-1 outline-blue-300"
+        />
+      </label>
+      <label class="col-span-2 w-full flex items-center">
+        <span class="text-nowrap">个数：</span>
+        <input
+          type="range"
+          id="steps"
+          min="3"
+          max="27"
+          value="5"
+          class="w-full outline-none bg-red-300"
+        />
+        <span id="stepNumber" class="ml-4">5</span>
+      </label>
+      <div class="col-span-2 w-full flex justify-center">
+        <button
+          id="submit"
+          class="px-16 py-2 rounded-full bg-blue-700 text-white hover:opacity-75 outline-none"
+        >
+          生成
+        </button>
+      </div>
+    </section>
+    <section id="colorList" class="mt-8"></section>
+
+    <script>
+      const startColorElement = document.getElementById("startColor");
+      const startColorTextElement = document.getElementById("startColorText");
+      const endColorElement = document.getElementById("endColor");
+      const endColorTextElement = document.getElementById("endColorText");
+      const stepsElement = document.getElementById("steps");
+      const stepNumberElement = document.getElementById("stepNumber");
+      const colorListElement = document.getElementById("colorList");
+
+      const hexToRgb = (hex) => {
+        hex = hex.replace(/^#/, "");
+        if (hex.length === 3) {
+          hex = hex
+            .split("")
+            .map((x) => x + x)
+            .join("");
+        }
+        const intValue = parseInt(hex, 16);
+        return {
+          r: (intValue >> 16) & 255,
+          g: (intValue >> 8) & 255,
+          b: intValue & 255,
+        };
+      };
+      const rgbToHex = (rgb) => {
+        return (
+          "#" +
+          ((1 << 24) + (rgb.r << 16) + (rgb.g << 8) + rgb.b)
+            .toString(16)
+            .slice(1)
+            .toUpperCase()
+        );
+      };
+
+      const getColor = (startHex, endHex, ratio) => {
+        const startRGB = hexToRgb(startHex);
+        const endRGB = hexToRgb(endHex);
+        const r = Math.round(startRGB.r + (endRGB.r - startRGB.r) * ratio);
+        const g = Math.round(startRGB.g + (endRGB.g - startRGB.g) * ratio);
+        const b = Math.round(startRGB.b + (endRGB.b - startRGB.b) * ratio);
+        return rgbToHex({ r, g, b });
+      };
+
+      startColorElement.addEventListener("input", () => {
+        startColorTextElement.value = startColorElement.value;
+        startColorElement.parentNode.style.backgroundColor =
+          startColorElement.value;
+      });
+      startColorTextElement.addEventListener("input", () => {
+        startColorElement.value = startColorTextElement.value;
+        startColorElement.parentNode.style.backgroundColor =
+          startColorElement.value;
+      });
+
+      endColorElement.addEventListener("input", () => {
+        endColorTextElement.value = endColorElement.value;
+        endColorElement.parentNode.style.backgroundColor =
+          endColorElement.value;
+      });
+      endColorTextElement.addEventListener("input", () => {
+        endColorElement.value = endColorTextElement.value;
+        endColorElement.parentNode.style.backgroundColor =
+          endColorElement.value;
+      });
+
+      stepsElement.addEventListener("input", () => {
+        stepNumberElement.innerText = stepsElement.value;
+      });
+
+      document.getElementById("submit").addEventListener("click", () => {
+        const startColor = startColorElement.value;
+        const endColor = endColorElement.value;
+        const steps = stepsElement.value;
+
+        const fragment = document.createDocumentFragment();
+        const ulElement = document.createElement("ul");
+        ulElement.classList.add("flex", "flex-col", "items-center");
+
+        for (let i = 0; i < steps; i++) {
+          const color =
+            getColor(startColor, endColor, i / (steps - 1)) ?? "#000000";
+          const liElement = document.createElement("li");
+          liElement.classList.add(
+            "w-[32rem]",
+            "h-16",
+            `bg-[${color}]`,
+            "text-white",
+            "text-lg",
+            "cursor-pointer",
+            "hover:scale-105",
+            "duration-150",
+            "ease-in",
+            "flex",
+            "justify-center",
+            "items-center"
+          );
+          liElement.textContent = color;
+          liElement.addEventListener("click", async () => {
+            try {
+              await navigator.clipboard.writeText(color);
+              alert("已复制到剪贴板！");
+            } catch (err) {
+              console.log(err);
+            }
+          });
+          ulElement.appendChild(liElement);
+        }
+
+        fragment.appendChild(ulElement);
+        colorListElement.innerHTML = "";
+        colorListElement.appendChild(fragment);
+      });
+    </script>
+  </body>
+</html>
