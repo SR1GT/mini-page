@@ -138,17 +138,28 @@
 
         const fragment = document.createDocumentFragment();
         const ulElement = document.createElement("ul");
-        ulElement.classList.add("flex", "flex-col", "items-center");
+        ulElement.classList.add(
+          "mx-auto",
+          "w-full",
+          "grid",
+          `grid-cols-${steps < 4 ? steps : 4}`,
+          `lg:grid-cols-${steps < 6 ? steps : 6}`,
+          `xl:grid-cols-${steps < 8 ? steps : 8}`,
+          "gap-y-4",
+          "items-center"
+        );
 
         for (let i = 0; i < steps; i++) {
           const color =
             getColor(startColor, endColor, i / (steps - 1)) ?? "#000000";
           const liElement = document.createElement("li");
           liElement.classList.add(
-            "w-[32rem]",
-            "h-16",
+            "w-full",
+            "px-20",
+            "py-4",
             `bg-[${color}]`,
-            "text-white",
+            `text-${color === "#FFFFFF" ? "black" : "white"}`,
+            `border${color === "#FFFFFF" ? "" : "-none"}`,
             "text-lg",
             "cursor-pointer",
             "hover:scale-105",
