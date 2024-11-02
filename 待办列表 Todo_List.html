@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"
+    />
+  </head>
+
+  <body
+    class="flex flex-col justify-center items-center h-screen bg-gradient-to-b from-sky-400 to-sky-300"
+  >
+    <main class="relative p-8 bg-lime-100 rounded-xl shadow-xl">
+      <div class="absolute top-6 right-6">
+        <button
+          id="button-reset"
+          class="relative outline-none p-1.5 rounded-full hover:bg-white duration-150 before:content-[attr(data-tooltip)] before:absolute before:-bottom-7 before:left-1/2 before:-translate-x-1/2 before:w-16 before:bg-gray-900 before:text-gray-50 before:py-1 before:text-xs before:rounded-full before:shadow-xl before:hidden hover:before:block"
+          data-tooltip="重置"
+        >
+          <svg
+            viewBox="0 0 1024 1024"
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+          >
+            <path
+              d="M877.714286 477.915429c0 215.04-164.059429 390.070857-365.714286 390.070857-119.515429 0-225.572571-61.44-292.352-156.233143L329.142857 594.870857H0v351.158857l115.346286-123.026285C209.188571 945.590857 351.963429 1024 512 1024c282.770286 0 512-244.516571 512-546.157714h-146.285714zM512 0C229.229714 0 0 244.516571 0 546.157714h146.285714c0-215.113143 164.059429-390.144 365.714286-390.144 119.442286 0 225.572571 61.44 292.352 156.233143L694.857143 429.129143H1024v-351.085714L908.653714 201.142857C814.811429 78.482286 671.963429 0 512 0z"
+            ></path>
+          </svg>
+        </button>
+      </div>
+
+      <h1 class="flex justify-center gap-1 text-3xl font-serif font-bold">
+        <label id="label-name" class="relative">
+          <input
+            id="input-name"
+            type="text"
+            class="absolute opacity-0 w-full z-10"
+            value="我"
+            autocomplete="off"
+          />
+          <span>我</span>
+        </label>
+        的待办列表
+      </h1>
+
+      <div class="w-[60vw] h-[60vh] grid grid-cols-[1fr,2fr] gap-x-4 mt-8">
+        <section class="w-full h-full flex flex-col gap-y-2">
+          <h2 class="text-lg font-semibold">待办</h2>
+          <div class="w-full border border-dashed border-gray-400"></div>
+          <ul
+            id="ul-todo"
+            class="w-full h-[55vh] overflow-hidden hover:overflow-y-auto"
+          >
+            <li class="w-full flex justify-center">
+              <button
+                id="button-add"
+                class="w-4/5 flex justify-center py-1 rounded-full shadow-lg bg-white hover:bg-opacity-90 duration-150"
+              >
+                <svg
+                  viewBox="0 0 1024 1024"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                >
+                  <path
+                    d="M948.313043 442.991304l-369.530435 0 0-369.530435c0-37.843478-31.165217-69.008696-69.008696-69.008696-37.843478 0-69.008696 31.165217-69.008696 69.008696l0 369.530435-369.530435 0c-37.843478 0-69.008696 31.165217-69.008696 69.008696 0 37.843478 31.165217 69.008696 69.008696 69.008696l369.530435 0 0 369.530435c0 37.843478 31.165217 69.008696 69.008696 69.008696 37.843478 0 69.008696-31.165217 69.008696-69.008696l0-369.530435 369.530435 0c37.843478 0 69.008696-31.165217 69.008696-69.008696C1017.321739 474.156522 988.382609 442.991304 948.313043 442.991304z"
+                  ></path>
+                </svg>
+              </button>
+            </li>
+          </ul>
+        </section>
+        <section class="w-full h-full">
+          <h2 class="text-lg font-semibold">记事本</h2>
+          <div class="w-full border border-dashed border-gray-400 my-2"></div>
+          <textarea
+            id="textarea-notepad"
+            class="w-full h-[55vh] bg-transparent outline-none overflow-hidden hover:overflow-y-auto placeholder:text-black"
+            style="resize: none"
+            placeholder="点此开始编辑"
+          ></textarea>
+        </section>
+      </div>
+    </main>
+
+    <dialog
+      id="dialog-new-todo"
+      class="p-4 bg-indigo-300 rounded-xl backdrop:bg-black/60"
+    >
+      <h4 class="text-center text-lg">新事项</h4>
+      <input
+        id="input-new-todo"
+        type="text"
+        maxlength="25"
+        class="w-72 my-4 bg-transparent border-b-2 border-b-gray-500 p-1 outline-none"
+        autocomplete="off"
+      />
+      <div class="flex justify-center gap-4">
+        <button
+          id="button-confirm"
+          class="outline-none border px-4 py-1 rounded-lg hover:bg-green-300 duration-150"
+        >
+          确认
+        </button>
+        <button id="button-cancel" class="text-sm">取消</button>
+      </div>
+    </dialog>
+
+    <script>
+      const dialogNewTodo = document.getElementById("dialog-new-todo");
+      const ulTodo = document.getElementById("ul-todo");
+      const inputNewTodo = document.getElementById("input-new-todo");
+      const textareaNotepad = document.getElementById("textarea-notepad");
+      const createNewTodoItem = (value, isCompleted) => {
+        const liElement = document.createElement("li");
+        liElement.classList.add(
+          "w-full",
+          "flex",
+          "justify-between",
+          "items-center",
+          "gap-x-4",
+          "px-4",
+          "py-2"
+        );
+
+        const labelElement = document.createElement("label");
+        labelElement.classList.add("flex", "items-center", "gap-x-1");
+
+        const checkboxElement = document.createElement("input");
+        checkboxElement.type = "checkbox";
+        checkboxElement.classList.add("w-5", "h-5");
+        checkboxElement.checked = isCompleted ?? false;
+        checkboxElement.addEventListener("change", (e) => {
+          if (e.target.checked) {
+            spanElement.classList.add("line-through");
+          } else {
+            spanElement.classList.remove("line-through");
+          }
+
+          const oldTodoList =
+            JSON.parse(localStorage.getItem("todoList")) || [];
+          oldTodoList.forEach((item) => {
+            if (item.name === value) {
+              item.isCompleted = e.target.checked;
+            }
+          });
+          localStorage.setItem("todoList", JSON.stringify(oldTodoList));
+        });
+
+        const spanElement = document.createElement("span");
+        spanElement.textContent = value;
+        spanElement.classList.add("w-[12vw]", "truncate");
+        if (isCompleted) {
+          spanElement.classList.add("line-through");
+        }
+
+        const buttonDelete = document.createElement("button");
+        buttonDelete.classList.add(
+          "size-6",
+          "rounded-full",
+          "flex",
+          "justify-center",
+          "items-center",
+          "bg-red-500",
+          "hover:bg-red-600",
+          "duration-150"
+        );
+        buttonDelete.innerHTML = `<svg fill="white" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="12" height="12"><path d="M861.184 192.512q30.72 0 50.688 10.24t31.744 25.6 16.384 33.28 4.608 33.28q0 7.168-0.512 11.264t-0.512 7.168l0 6.144-67.584 0 0 537.6q0 20.48-8.192 39.424t-23.552 33.28-37.376 23.04-50.688 8.704l-456.704 0q-26.624 0-50.176-8.192t-40.448-23.04-26.624-35.84-9.728-47.616l0-527.36-63.488 0q-1.024-1.024-1.024-5.12-1.024-5.12-1.024-31.744 0-13.312 6.144-29.696t18.432-30.208 31.744-23.04 46.08-9.216l91.136 0 0-62.464q0-26.624 18.432-45.568t45.056-18.944l320.512 0q35.84 0 49.664 18.944t13.824 45.568l0 63.488q21.504 1.024 46.08 1.024l47.104 0zM384 192.512l320.512 0 0-64.512-320.512 0 0 64.512zM352.256 840.704q32.768 0 32.768-41.984l0-475.136-63.488 0 0 475.136q0 21.504 6.656 31.744t24.064 10.24zM545.792 839.68q17.408 0 23.552-9.728t6.144-31.232l0-475.136-63.488 0 0 475.136q0 40.96 33.792 40.96zM738.304 837.632q18.432 0 24.576-9.728t6.144-31.232l0-473.088-64.512 0 0 473.088q0 40.96 33.792 40.96z"></path></svg>`;
+        buttonDelete.addEventListener("click", () => {
+          ulTodo.removeChild(liElement);
+
+          const oldTodoList =
+            JSON.parse(localStorage.getItem("todoList")) || [];
+          const newTodoList = oldTodoList.filter(
+            (item) => item.name !== spanElement.textContent
+          );
+          localStorage.setItem("todoList", JSON.stringify(newTodoList));
+        });
+
+        labelElement.appendChild(checkboxElement);
+        labelElement.appendChild(spanElement);
+        liElement.appendChild(labelElement);
+        liElement.appendChild(buttonDelete);
+
+        return liElement;
+      };
+      const cancelHandler = () => {
+        inputNewTodo.value = "";
+        dialogNewTodo.close();
+      };
+      const addNewTodoHandler = () => {
+        const newTodo = inputNewTodo.value;
+        if (newTodo !== "") {
+          const fragment = document.createDocumentFragment();
+          const liElement = createNewTodoItem(newTodo);
+          fragment.appendChild(liElement);
+          ulTodo.insertBefore(fragment, ulTodo.firstChild);
+
+          const oldTodoList =
+            JSON.parse(localStorage.getItem("todoList")) || [];
+          console.log(oldTodoList);
+          oldTodoList.push({
+            name: newTodo,
+            isCompleted: false,
+          });
+          localStorage.setItem("todoList", JSON.stringify(oldTodoList));
+
+          cancelHandler();
+        } else {
+          alert("新待办内容不能为空");
+        }
+      };
+
+      document.getElementById("input-name").addEventListener("input", (e) => {
+        document
+          .getElementById("label-name")
+          .querySelector("span").textContent =
+          e.target.value === "" ? "我" : e.target.value;
+      });
+      document.getElementById("button-reset").addEventListener("click", () => {
+        if (confirm("确定要重置所有数据吗？")) {
+          localStorage.clear();
+          location.reload();
+        }
+      });
+
+      document.getElementById("button-add").addEventListener("click", () => {
+        dialogNewTodo.showModal();
+      });
+      inputNewTodo.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addNewTodoHandler();
+        }
+      });
+      document
+        .getElementById("button-confirm")
+        .addEventListener("click", addNewTodoHandler);
+      document
+        .getElementById("button-cancel")
+        .addEventListener("click", cancelHandler);
+
+      textareaNotepad.addEventListener("input", (e) => {
+        localStorage.setItem("notepad", e.target.value);
+      });
+
+      (() => {
+        const todoList = JSON.parse(localStorage.getItem("todoList")) ?? [];
+        if (todoList.length > 0) {
+          const fragment = document.createDocumentFragment();
+          todoList.forEach((item) => {
+            fragment.appendChild(
+              createNewTodoItem(item.name, item.isCompleted)
+            );
+          });
+          ulTodo.insertBefore(fragment, ulTodo.firstChild);
+        }
+        textareaNotepad.value = localStorage.getItem("notepad") ?? "";
+      })();
+    </script>
+  </body>
+</html>
