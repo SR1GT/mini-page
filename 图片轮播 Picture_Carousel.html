@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+      #selected {
+        transform: scale(1.2);
+      }
+    </style>
+  </head>
+
+  <body
+    class="w-screen min-h-screen flex flex-col justify-center items-center gap-6 py-8 bg-gradient-to-br from-teal-400 to-cyan-400"
+  >
+    <main class="relative w-2/3 aspect-[16/9]">
+      <button
+        id="button-left"
+        class="outline-none absolute top-1/2 left-4 -translate-y-1/2 p-1 text-white rounded-xl hover:shadow-xl hover:bg-sky-400 duration-150 z-10"
+      ></button>
+      <button
+        id="button-right"
+        class="outline-none absolute top-1/2 right-4 -translate-y-1/2 rotate-180 p-1 text-white rounded-xl hover:shadow-xl hover:bg-sky-400 duration-150 z-10"
+      ></button>
+      <div
+        id="buttons-index"
+        class="absolute right-4 bottom-4 flex items-center gap-2 z-10"
+      ></div>
+
+      <div
+        class="absolute bottom-0 w-full flex items-end pl-4 pb-2.5 bg-gradient-to-b from-transparent to-black/50"
+      >
+        <span
+          id="image-remark"
+          class="w-2/3 truncate text-white text-lg"
+        ></span>
+      </div>
+
+      <div id="images-index" class="w-full h-full flex overflow-x-hidden"></div>
+    </main>
+
+    <script>
+      // #region 初始化轮播图列表
+      const buttonsIndex = document.getElementById("buttons-index");
+      const imagesIndex = document.getElementById("images-index");
+
+      const imageList = [
+        {
+          url: "https://images.unsplash.com/photo-1730829807497-9c5b8c9c41c4",
+          remark: "Welcome to 2025",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1730365553322-6cd83a29f9fa",
+          remark: "Sunny beach",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1682339373702-32e2286aa110",
+          remark: "My favorite place",
+        },
+      ];
+      imageList.forEach((image, index) => {
+        const buttonElement = document.createElement("button");
+        buttonElement.classList.add(
+          "outline-none",
+          "size-3",
+          "bg-white",
+          "hover:bg-green-400",
+          "duration-150"
+        );
+        buttonElement.addEventListener("click", () => changeImage(index));
+        buttonsIndex.appendChild(buttonElement);
+
+        const imgElement = document.createElement("img");
+        imgElement.classList.add(
+          "w-full",
+          "h-full",
+          "object-cover",
+          "object-center",
+          "cursor-pointer"
+        );
+        imgElement.src = image.url;
+        imgElement.alt = image.remark;
+        imgElement.addEventListener("click", () => window.open(image.url));
+        imagesIndex.appendChild(imgElement);
+      });
+      // #endregion
+
+      // #region 轮播图切换
+      let currentIndex = 0;
+      const maxIndex = imageList.length - 1;
+      const imageRemark = document.getElementById("image-remark");
+      buttonsIndex.children[currentIndex].id = "selected";
+      imageRemark.textContent = imageList[currentIndex].remark;
+
+      const changeImage = (targetIndex) => {
+        if (currentIndex === targetIndex) return;
+
+        if (currentIndex === maxIndex && targetIndex === 0) {
+          requestAnimationFrame(() =>
+            imagesIndex.scrollTo({
+              left: 0,
+              behavior: "smooth",
+            })
+          );
+        } else {
+          const scrollAmount =
+            imagesIndex.children[0].clientWidth *
+            Math.abs(targetIndex - currentIndex);
+          const newScrollLeft =
+            currentIndex > targetIndex
+              ? imagesIndex.scrollLeft - scrollAmount
+              : imagesIndex.scrollLeft + scrollAmount;
+
+          requestAnimationFrame(() =>
+            imagesIndex.scrollTo({
+              left: newScrollLeft,
+              behavior: "smooth",
+            })
+          );
+        }
+        currentIndex = targetIndex;
+
+        document.getElementById("selected").id = "";
+        buttonsIndex.children[currentIndex].id = "selected";
+
+        imageRemark.textContent = imageList[currentIndex].remark;
+      };
+
+      const buttonLeft = document.getElementById("button-left");
+      const buttonRight = document.getElementById("button-right");
+      const arrow = `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="30" height="30" style="fill: currentColor"><path d="M691.498667 798.165333a42.666667 42.666667 0 0 1-57.621334 2.496l-2.709333-2.496-256-256a42.666667 42.666667 0 0 1-2.496-57.621333l2.496-2.709333 256-256a42.666667 42.666667 0 0 1 62.826667 57.621333l-2.496 2.709333L465.706667 512l225.813333 225.834667a42.666667 42.666667 0 0 1 2.496 57.621333l-2.496 2.709333z"></path></svg>`;
+
+      buttonLeft.innerHTML = arrow;
+      buttonLeft.addEventListener("click", () =>
+        changeImage(currentIndex > 0 ? currentIndex - 1 : maxIndex)
+      );
+
+      buttonRight.innerHTML = arrow;
+      buttonRight.addEventListener("click", () =>
+        changeImage(currentIndex < maxIndex ? currentIndex + 1 : 0)
+      );
+
+      setInterval(() => {
+        changeImage(currentIndex < maxIndex ? currentIndex + 1 : 0);
+      }, 5000);
+      // #endregion
+
+      window.addEventListener("resize", () => location.reload());
+    </script>
+  </body>
+</html>
