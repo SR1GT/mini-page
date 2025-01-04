@@ -1,0 +1,76 @@
+<!-- https://www.bilibili.com/video/BV1BNq1YoEZB?t=1063.8 -->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+  </style>
+</head>
+
+<body class="w-2/3 min-h-screen mx-auto bg-slate-100">
+  <main class="flex flex-col items-center gap-6 p-8">
+    <div class="w-full flex items-center gap-6">
+      <label
+        class="block w-full py-4 flex justify-center items-center bg-sky-200 hover:bg-sky-400 hover:text-white duration-150 rounded-lg shadow-lg cursor-pointer">
+        <p class="truncate">① 点此上传图片</p>
+        <input id="input-upload" type="file" accept="image/*" class="opacity-0 w-0 h-0" />
+      </label>
+      <button id="btn-compression"
+        class="w-full py-4 bg-sky-200 hover:bg-sky-400 hover:text-white duration-150 rounded-lg shadow-lg truncate">② 压缩并下载</button>
+    </div>
+    <canvas id="canvas-preview" class="min-w-full border-8 border-dashed shadow-lg"></canvas>
+  </main>
+
+  <script>
+    let newImage = new Image();
+
+    document.getElementById('input-upload').addEventListener('change', (changeEvent) => {
+      changeEvent.preventDefault();
+
+      // 读取上传的图片并生成一个 dataURL 字符串
+      const reader = new FileReader();
+      reader.readAsDataURL(changeEvent.target.files[0]);
+
+      reader.onload = (readerEvent) => {
+        newImage = new Image();
+        newImage.src = readerEvent.target.result;
+        newImage.onload = () => {
+          const canvasPreview = document.getElementById('canvas-preview');
+
+          // 缩放以预览
+          const scale = Math.min(canvasPreview.width / newImage.width, canvasPreview.height / newImage.height);
+          const newWidth = newImage.width * scale * devicePixelRatio;
+          const newHeight = newImage.height * scale * devicePixelRatio;
+          canvasPreview.width = newWidth;
+          canvasPreview.height = newHeight;
+
+          // 绘制图片
+          canvasPreview.getContext('2d').drawImage(newImage, 0, 0, newWidth, newHeight);
+        };
+      };
+    });
+
+    document.getElementById('btn-compression')
+      .addEventListener('click', () => {
+        if (newImage.src === "") return alert('请先上传图片');
+
+        // 重绘以保证比例
+        const canvas = document.createElement('canvas');
+        canvas.width = newImage.width * devicePixelRatio;
+        canvas.height = newImage.height * devicePixelRatio;
+        canvas.getContext('2d').drawImage(newImage, 0, 0, canvas.width, canvas.height);
+
+        // 下载
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/jpeg', 0.8);
+        link.download = "compression.jpg";
+        link.click();
+      });
+  </script>
+</body>
+
+</html>
